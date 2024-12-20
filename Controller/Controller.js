@@ -75,8 +75,8 @@ export const doctorRegistration = async(req, res) => {
     }
 
     try {
-        const existingDoctor = doctData.findOne({ doctorEmail })
-        const existingUserName = loginData.findOne({ username: userName }) 
+        const existingDoctor = await doctData.findOne({ doctorEmail })
+        const existingUserName = await loginData.findOne({ username: userName }) 
 
         if(existingDoctor){
             return res.status(400).json({ message: "Doctor with same email exist" })
@@ -85,8 +85,36 @@ export const doctorRegistration = async(req, res) => {
             return res.status(400).json({ message: "Username already taken by other user", success:false })
         }
         
+        const hashedPassword = await bcrypt.hash(userPassword, 10)
+        const login = await loginData.create({
+            username: userName,
+            password: hashedPassword,
+            role: "doctor",
+        })
+
+        await doctData.create({
+            commonkey: login._id,
+            doctorName,
+            doctorEmail,
+            doctorNumber,
+            doctorAddress,
+            doctorQualification,
+        })
+        res.status(201).json({ message: "User created successfully", success:true });
 
     } catch (error) {
-        
+        console.log(error.message);
+        return res.status(500).json({ message:"server error", success:false })
+    }
+}
+
+/* function to get all users */
+export const getAllUsers = async (req, res) => {
+    try {
+        const users = await userData.find({})
+        res.status(200).json(users);
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ message:"server error", success:false })
     }
 }
