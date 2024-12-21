@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const shopSchema = new Schema({
     commonkey:{
@@ -22,3 +22,6 @@ const shopSchema = new Schema({
         required:true
     },
 })
+
+const shopdata = mongoose.model('Shop', shopSchema)
+export default shopdata

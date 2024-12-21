@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import userData from '../Model/User.js'
 import loginData from '../Model/Login.js'
 import doctData from '../Model/Doctor.Model.js';
+import shopdata from '../Model/Shop.Model.js';
 
 /* function for user registration and username, password and role need to store in the backend */
 export const userRegistration = async (req, res) => {
@@ -116,5 +117,46 @@ export const getAllUsers = async (req, res) => {
     } catch (error) {
         console.log(error.message);
         return res.status(500).json({ message:"server error", success:false })
+    }
+}
+
+
+export const getAlldoct = async(req, res) => {
+    try {
+        const doct = await doctData.find({})
+        res.status(200).json(doct);
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).json({ message:"server error", success:false })
+    }
+}
+
+
+/* function for shop registration and username password moving to Login schema */
+export const shopRegistration = async (req, res) => {
+    try {
+        const { shopName, shopAddress, shopPhone, shopEmail, userName, userPassword } = req.body
+        if (
+            !shopName ||
+            !shopAddress ||
+            !shopPhone ||
+            !shopEmail ||
+            !userName ||
+            !userPassword
+        ) {
+            return res.status(400).json({ message: "all fields are required", success:false })
+        }
+        const existingShop = await shopdata.findOne({ shopEmail })
+        if (existingShop) {
+            return res.status(400).json({ message: "Shop with same email exist", success:false })
+        }
+
+        const existingShopuser = await loginData.findOne({ username: userName })
+        if (existingShopuser) {
+            return res.status(400).json({ message: "User with same username exist", success:false})
+            }
+        
+    } catch (error) {
+        
     }
 }
