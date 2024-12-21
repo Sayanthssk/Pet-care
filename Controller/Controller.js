@@ -156,7 +156,34 @@ export const shopRegistration = async (req, res) => {
             return res.status(400).json({ message: "User with same username exist", success:false})
             }
         
+        const hashedPassword = await bcrypt.hash(userPassword, 10)
+
+        const shopLogin = await loginData.create({
+            username: userName,
+            password: hashedPassword,
+            role: 'shop'
+        })
+
+        await shopdata.create({
+            commonkey: shopLogin._id,
+            shopName: shopName,
+            shopAddress: shopAddress,
+            shopPhone: shopPhone,
+            shopEmail: shopEmail
+        })
+        res.status(200).json({ message: "Shop registered Successfully", success:true })
     } catch (error) {
-        
+        console.log(error.message)
+        return res.status(500).message({ message:"internal server error", success:false })
+    }
+}
+
+
+export const getAllShops = async (req, res) => {
+    try {
+        const shops = await shopdata.find({ })
+        res.status(200).json({ shops, success:true })
+    } catch (error) {
+        return res.status(500).json({ message: "internal server  error" })
     }
 }
