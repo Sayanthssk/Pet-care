@@ -3,6 +3,8 @@ import userData from '../Model/User.js'
 import loginData from '../Model/Login.js'
 import doctData from '../Model/Doctor.Model.js';
 import shopdata from '../Model/Shop.Model.js';
+import productData from '../Model/shop.Product.js';
+import cartData from '../Model/user.Cart.js';
 
 /* function for user registration and username, password and role need to store in the backend */
 export const userRegistration = async (req, res) => {
@@ -185,5 +187,19 @@ export const getAllShops = async (req, res) => {
         res.status(200).json({ shops, success:true })
     } catch (error) {
         return res.status(500).json({ message: "internal server  error" })
+    }
+}
+
+// function for addin the product by the shop by storing shopid
+
+export const AddProduct = async(req, res) => {
+    try {
+        const { shopId, name, price, description, productImage } = req.body
+        const existingProduct = await productData.findOne({ name: name, shopId })
+        if (existingProduct) {
+            return res.status(400).json({ message: "Product with same name exist", success:false})
+        }
+    } catch (error) {
+        
     }
 }

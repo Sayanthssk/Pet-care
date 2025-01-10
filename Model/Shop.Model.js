@@ -13,7 +13,7 @@ const shopSchema = new Schema({
         type:String,
         required:true
     },
-    shopPhone:{
+    shopPhone:{     
         type:String,
         required:true
     },
