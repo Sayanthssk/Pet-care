@@ -8,7 +8,7 @@ import cartData from '../Model/user.Cart.js';
 
 /* function for user registration and username, password and role need to store in the backend */
 export const userRegistration = async (req, res) => {
-    const { userFullname, userEmail, city, state, pincode, userName, userPassword } = req.body;
+    const { userFullname, userEmail, city, state, pincode, userName, userPassword, role } = req.body;
     console.log(req.body);
 
     if (
@@ -18,9 +18,14 @@ export const userRegistration = async (req, res) => {
         !state ||
         !pincode ||
         !userName ||
-        !userPassword
+        !userPassword ||
+        !role
     ) {
-        return res.status(400).json({ message: "please fill all fields" });
+        return res.status(400).json({ message: "Please fill all fields" });
+    }
+
+    if (!['buyer', 'seller'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role selected" });
     }
 
     try {
@@ -29,12 +34,12 @@ export const userRegistration = async (req, res) => {
         
         if (existingUserName) {
             console.log("Username is already taken");
-            return res.status(400).json({ message: "Username already taken", success:false });  
+            return res.status(400).json({ message: "Username already taken", success: false });  
         }
         
         if (existingUser) {
             console.log("Email is already taken");
-            return res.status(400).json({ message: "Email already taken", success:false });
+            return res.status(400).json({ message: "Email already taken", success: false });
         }
 
         const hashedPassword = await bcrypt.hash(userPassword, 10);
@@ -42,7 +47,7 @@ export const userRegistration = async (req, res) => {
         const login = await loginData.create({
             username: userName,  
             password: hashedPassword,
-            role: 'user',
+            role: role,  // Save the role as buyer or seller
         });
 
         await userData.create({
@@ -54,12 +59,13 @@ export const userRegistration = async (req, res) => {
             pincode,
         });
 
-        res.status(201).json({ message: "User created successfully", successL:true });
+        res.status(201).json({ message: "User created successfully", success: true });
     } catch (error) {
         console.log("Error at registering:", error.message);
-        res.status(500).json({ message: "Internal server error", success:false });
+        res.status(500).json({ message: "Internal server error", success: false });
     }
 };
+
 
 /* function for registration and username, password and role need to store in the Login table */
 export const doctorRegistration = async(req, res) => {
@@ -199,7 +205,62 @@ export const AddProduct = async(req, res) => {
         if (existingProduct) {
             return res.status(400).json({ message: "Product with same name exist", success:false})
         }
+        
     } catch (error) {
         
+        return res.status(500).json({ message: "internal server error", success: false })
     }
 }
+
+
+
+export const login = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        const user = await loginData.findOne({ username });
+        if (!user) {
+            return res.status(400).json({ message: "Invalid username" });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid password" });
+        }
+
+        const { role, _id: id } = user;
+
+        let userDetails;
+
+        if (role === "buyer") {
+            userDetails = await userData.findOne({ commonKey: id }).lean();
+        } else if (role === "doctor") {
+            userDetails = await doctData.findOne({ commonkey: id }).lean();
+        } else if (role === "shop") {
+            userDetails = await shopdata.findOne({ commonkey: id }).lean();
+        } else if (role === "seller") {
+            userDetails = await userData.findOne({ commonKey: id }).lean();           
+        }
+
+        if (!userDetails) {
+            return res.status(404).json({ message: "User details not found" });
+        }
+
+        const response = {
+            id,
+            role,
+            username: user.username,
+            userDetails
+        };
+
+        return res.status(200).json({
+            message: "Login successful",
+            data: response,
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+

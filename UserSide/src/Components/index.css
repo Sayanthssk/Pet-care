@@ -1,0 +1,13 @@
+body {
+    font-family: Arial, sans-serif;
+}
+#hero {
+    background: url('https://img.freepik.com/free-photo/portrait-german-shepherd-dog-gradient-lighting_23-2149277238.jpg?t=st=1738038151~exp=1738041751~hmac=e790914fb6bab0df3c4954105e55f31951d243e3f8bd04a4260bd86038caa542&w=996') no-repeat center center;
+    background-size: cover;
+    color: white;
+}
+.carousel-section img {
+    max-height: 400px;
+    object-fit: cover;
+}
+
