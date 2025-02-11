@@ -5,11 +5,13 @@ import doctData from '../Model/Doctor.Model.js';
 import shopdata from '../Model/Shop.Model.js';
 import productData from '../Model/shop.Product.js';
 import cartData from '../Model/user.Cart.js';
+import moneydata from '../Model/MoneyModel.js';
+import upload from '../Middleware/upload.js';
 
 /* function for user registration and username, password and role need to store in the backend */
 export const userRegistration = async (req, res) => {
     const { userFullname, userEmail, city, state, pincode, userName, userPassword, role } = req.body;
-    console.log(req.body);
+    
 
     if (
         !userFullname ||
@@ -48,7 +50,8 @@ export const userRegistration = async (req, res) => {
             username: userName,  
             password: hashedPassword,
             role: role,  // Save the role as buyer or seller
-        });
+            verify: "true"
+});
 
         await userData.create({
             commonKey: login._id,
@@ -129,6 +132,8 @@ export const getAllUsers = async (req, res) => {
 }
 
 
+
+
 export const getAlldoct = async(req, res) => {
     try {
         const doct = await doctData.find({})
@@ -198,19 +203,92 @@ export const getAllShops = async (req, res) => {
 
 // function for addin the product by the shop by storing shopid
 
-export const AddProduct = async(req, res) => {
+export const AddProduct = async (req, res) => {
     try {
-        const { shopId, name, price, description, productImage } = req.body
-        const existingProduct = await productData.findOne({ name: name, shopId })
-        if (existingProduct) {
-            return res.status(400).json({ message: "Product with same name exist", success:false})
+        const { name, price, description } = req.body;
+        const shopId = req.params.shopId;
+
+        // Validate required fields
+        if (!name || !price || !description) {
+            return res.status(400).json({ message: "Name, price, and description are required" });
         }
-        
+
+        // Extract product images from the request
+        const productImages = req.files ? req.files.map(file => file.filename) : [];
+
+        // Create a new product entry associated with the shop
+        const newProduct = new productData({
+            shopId,
+            name,
+            price,
+            description,
+            productImage: productImages,
+        });
+
+        // Save the new product to the database
+        await newProduct.save();
+
+        res.status(201).json({ message: "Product added successfully", newProduct });
     } catch (error) {
-        
-        return res.status(500).json({ message: "internal server error", success: false })
+        console.error("Error adding product:", error);
+        res.status(500).json({ message: "Error adding product", error: error.message });
+    }
+};
+
+// function to view all products
+
+export const viewAllProducts = async (req, res) => {
+    try {
+        const products = await productData.find({})
+        res.status(200).json(products)
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).json({ message: "server error" });  
     }
 }
+
+
+export const DeleteProduct = async (req, res) => {
+    try {
+        const { id } = req.params
+        const product = await productData.findByIdAndDelete({ _id: id })
+        if (!product) {
+            return res.status(404).json({ message: "Product not found "})
+        }
+        return res.status(200).json({ message: "Product deleted successfully" })
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ message:"server error" })
+    }
+}
+
+
+
+export const AddtoCart = async (req, res) => {
+    try {
+        const { userId, products, total, status } = req.body;
+
+        // Validate required fields
+        if (!userId || !products || !Array.isArray(products)) {
+            return res.status(400).json({ message: "Invalid input data" });
+        }
+
+        // Validate userId format
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid userId format" });
+        }
+
+        // Create and save the cart
+        const newCart = new cartData({ userId, products, total, status });
+        await newCart.save();
+
+        res.status(201).json(newCart);
+    } catch (error) {
+        console.error("Error in AddtoCart:", error.message);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 
 
 
@@ -218,31 +296,39 @@ export const login = async (req, res) => {
     try {
         const { username, password } = req.body;
 
+        // Find user by username
         const user = await loginData.findOne({ username });
         if (!user) {
             return res.status(400).json({ message: "Invalid username" });
         }
 
+        // Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid password" });
         }
 
+        // Get the user's role and ID
         const { role, _id: id } = user;
 
         let userDetails;
 
+        // Fetch user details based on the role
         if (role === "buyer") {
             userDetails = await userData.findOne({ commonKey: id }).lean();
         } else if (role === "doctor") {
             userDetails = await doctData.findOne({ commonkey: id }).lean();
         } else if (role === "shop") {
             userDetails = await shopdata.findOne({ commonkey: id }).lean();
+            console.log('Shop details:', userDetails); // Debugging line to check if the details are fetched
         } else if (role === "seller") {
-            userDetails = await userData.findOne({ commonKey: id }).lean();           
+            userDetails = await userData.findOne({ commonKey: id }).lean();
+        } else if (role === "admin") {
+            // For admin, no need to fetch additional details
+            userDetails = null;
         }
 
-        if (!userDetails) {
+        if (!userDetails && role !== "admin") {
             return res.status(404).json({ message: "User details not found" });
         }
 
@@ -250,7 +336,7 @@ export const login = async (req, res) => {
             id,
             role,
             username: user.username,
-            userDetails
+            userDetails: role === "admin" ? null : userDetails || {}, // Ensure empty object fallback
         };
 
         return res.status(200).json({
@@ -264,3 +350,46 @@ export const login = async (req, res) => {
     }
 };
 
+
+
+/* function to delete user and data from the logindata table also deleted */
+export const DeleteUser = async(req, res) => {
+    try {
+        const { id } = req.params
+        const user = await loginData.findByIdAndDelete({ _id: id })
+        if (!user) {
+            return res.status(404).json({ message: "User not found" })
+        }
+        await userData.findOneAndDelete({ commonKey: id });
+        return res.status(200).json({ message: "User deleted successfully" })
+    } catch (error) {
+        console.error(error.message)
+        return res.status(500).json({ message: "Server error" })
+    }
+}
+
+/* function for user to refill the money */
+export const refillMoney = async (req, res) => {
+    try {
+        const { commonkey } = req.params;
+        const { money } = req.body;
+
+        if (!money) {
+            return res.status(400).json({ message: "Money amount is required" });
+        }
+
+        const existingMoney = await moneydata.findOne({ commonkey });
+
+        if (existingMoney) {
+            existingMoney.money += money;
+            await existingMoney.save();
+            return res.status(200).json({ message: "Money refilled successfully", data: existingMoney });
+        } else {
+            const newMoneyEntry = new moneydata({ commonkey, money });
+            await newMoneyEntry.save();
+            return res.status(201).json({ message: "Money added successfully", data: newMoneyEntry });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
+    }
+}

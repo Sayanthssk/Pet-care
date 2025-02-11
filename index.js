@@ -34,11 +34,20 @@ mongoose.connect(Url).then(() => {
 })
 
 
-const uploadDir = path.join(__dirname, 'uploads', 'profilePhotos');
+const uploadDirs = [
+    'uploads/products',
+    'uploads/doctorProfiles',
+    'uploads/shops',
+    'uploads/pets',
+    'uploads/profilePhotos'
+];
 
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+uploadDirs.forEach(dir => {
+    const fullPath = path.join(__dirname, dir);
+    if (!fs.existsSync(fullPath)) {
+        fs.mkdirSync(fullPath, { recursive: true });
+    }
+});
 
 
 app.use('/api', route)

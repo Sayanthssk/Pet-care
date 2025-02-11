@@ -6,30 +6,34 @@ import { motion } from 'framer-motion';
 // import { Link } from 'react-router-dom';
 import IndexHeader from './IndexHeader';
 import { Link } from 'react-router-dom';
+import { FaPaw } from 'react-icons/fa'; // Import paw icon
+
 
 const Indexs = () => {
     return (
         <div>
             <IndexHeader />
             {/* Hero Section */}
-            <section id="hero" className="bg-light text-center py-5 mt-0">
+            <section id="hero" className="bg-light text-center py-5 mt-2">
                 <motion.div
                     initial={{ opacity: 0, y: -50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1 }}
                 >
-                    <h2 className="display-4">Welcome to PetCare</h2>
+                     <h2 className="custom-heading">
+        <FaPaw className="paw-icon" />Welcome to WoofTale
+      </h2>
                     <p className="lead">Your trusted partner in pet health and care.</p>
                 </motion.div>
-                <div className="mt-4">
-                    <button className="btn btn-danger mx-2">Shop Registration</button>
+                <div className="mt-2">
+                    <Link to={'/shopr'} className="btn btn-danger mx-2">Shop Registration</Link>
                     <Link to={'/docs'} className="btn btn-primary mx-2">Doctor Registration</Link>
                     <Link to={'/userreg'} className="btn btn-secondary mx-2">User Registration</Link>
                 </div>
             </section>
 
             {/* Auto-Scrolling Images Section */}
-            <section className="carousel-section py-5 ">
+            <section className="carousel-section py-5 mb-5 ">
                 <Carousel>
                     <Carousel.Item>
                         <img

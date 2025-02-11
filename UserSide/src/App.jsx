@@ -9,9 +9,12 @@ import Login from './Components/Login';
 import DsignUp from './Components/Doctor/DsignUp';
 import SsignUp from './Components/Shop/SsignUp';
 import UserReg from './Components/User/UserReg';
+import AdminDash from './Components/Admin/AdminDash';
+import ViewUser from './Components/Admin/ViewUser';
+import BuyerDash from './Components/User/BuyerDash';
+import AddProduct from './Components/Shop/AddProduct';
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
@@ -22,6 +25,10 @@ function App() {
         <Route path="/docs" element={<DsignUp />} />
         <Route path="/shopr" element={<SsignUp />} />
         <Route path="/userreg" element={<UserReg />} />
+        <Route path="/admindash" element={<AdminDash />} />
+        <Route path="/user" element={<ViewUser />} />
+        <Route path="/buyer-dash" element={<BuyerDash />} />
+        <Route path="/addprod" element={<AddProduct />} />
       </Routes>
      </Router>
     </>

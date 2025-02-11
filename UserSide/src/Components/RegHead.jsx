@@ -11,7 +11,7 @@ const RegHead = () => {
                    <Link to={'/'} className='h1 text-decoration-none '><h1 className="display-6">PetCare</h1></Link>
                     <nav>
                         <Link to={'/userreg'} className="text-light mx-2">User</Link>
-                        <a href="#services" className="text-light mx-2">Shop</a>
+                        <Link to={'/shopr'} className="text-light mx-2">Shop</Link>
                         <Link to={'/docs'} className="text-light mx-2">Doctor</Link>
                         <Link to='/login' className="text-light mx-2">Login</Link>
                     </nav>

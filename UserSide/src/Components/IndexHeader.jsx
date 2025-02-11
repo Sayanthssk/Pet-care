@@ -9,7 +9,11 @@ const IndexHeader = () => {
         {/* Header Section */}
         <header className="bg-dark text-light">
                 <div className="container d-flex justify-content-between align-items-center">
-                   <Link to={'/'} className='h1 text-decoration-none '><h1 className="display-6">PetCare</h1></Link>
+                <Link to={'/'} className='h1 text-decoration-none'>
+  <h1 className="display-6 custom-font-color">
+    W<span className="custom-oo">oo</span>fTale
+  </h1>
+</Link>
                     <nav>
                         <a href="#about" className="text-light mx-2">About</a>
                         <a href="#services" className="text-light mx-2">Services</a>
